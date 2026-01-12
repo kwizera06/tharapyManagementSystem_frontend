@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { taskAPI } from '../../services/api';
-import { CheckSquare, Square, Calendar, AlertCircle } from 'lucide-react';
+import { CheckSquare, Square, Calendar, AlertCircle, Filter, CheckCircle2, Circle } from 'lucide-react';
 import { format, isPast } from 'date-fns';
 
 const Tasks = () => {
@@ -41,54 +41,54 @@ const Tasks = () => {
     });
 
     if (loading) {
-        return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="relative">
+                    <div className="w-12 h-12 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin"></div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
-                <p className="text-gray-600">Complete tasks assigned by your therapist</p>
-            </div>
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Tasks</h1>
+                    <p className="text-slate-600 dark:text-slate-400">Track your progress and assignments</p>
+                </div>
 
-            {/* Filter Tabs */}
-            <div className="flex gap-2 mb-6">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all'
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    All ({tasks.length})
-                </button>
-                <button
-                    onClick={() => setFilter('pending')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pending'
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    Pending ({tasks.filter(t => !t.completed).length})
-                </button>
-                <button
-                    onClick={() => setFilter('completed')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'completed'
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    Completed ({tasks.filter(t => t.completed).length})
-                </button>
+                {/* Filter Tabs */}
+                <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    {['all', 'pending', 'completed'].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${filter === f
+                                    ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                }`}
+                        >
+                            {f}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Tasks List */}
-            <div className="space-y-3">
+            <div className="grid gap-4">
                 {filteredTasks.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <CheckSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">
-                            {filter === 'completed' ? 'No completed tasks yet' : 'No tasks assigned yet'}
+                    <div className="text-center py-16 glass-panel rounded-3xl">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckSquare className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                            {filter === 'completed' ? 'No completed tasks yet' : 'No tasks found'}
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                            {filter === 'completed'
+                                ? 'Complete tasks to see them here.'
+                                : 'You are all caught up! Check back later for new assignments.'}
                         </p>
                     </div>
                 ) : (
@@ -97,40 +97,48 @@ const Tasks = () => {
                         return (
                             <div
                                 key={task.id}
-                                className={`card hover:shadow-md transition-all ${task.completed ? 'opacity-75' : ''
+                                className={`glass-panel p-6 rounded-2xl transition-all group ${task.completed ? 'opacity-75 bg-slate-50/50 dark:bg-slate-800/30' : 'hover:border-primary-500/30'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <button
                                         onClick={() => !task.completed && handleToggleTask(task.id)}
-                                        className={`mt-1 flex-shrink-0 ${task.completed ? 'cursor-default' : 'cursor-pointer'
+                                        className={`mt-1 flex-shrink-0 transition-colors ${task.completed ? 'cursor-default' : 'cursor-pointer hover:scale-110 active:scale-95 transform transition-transform'
                                             }`}
                                         disabled={task.completed}
                                     >
                                         {task.completed ? (
-                                            <CheckSquare className="w-6 h-6 text-green-600" />
+                                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
                                         ) : (
-                                            <Square className="w-6 h-6 text-gray-400 hover:text-primary-600" />
+                                            <Circle className="w-6 h-6 text-slate-400 group-hover:text-primary-500" />
                                         )}
                                     </button>
-                                    <div className="flex-1">
-                                        <h3 className={`text-lg font-semibold mb-1 ${task.completed ? 'line-through text-gray-500' : 'text-gray-900'
-                                            }`}>
-                                            {task.title}
-                                        </h3>
-                                        <p className="text-sm text-gray-600 mb-2">{task.instructions}</p>
-                                        <div className="flex items-center gap-3 text-sm">
-                                            <div className={`flex items-center gap-2 ${isOverdue ? 'text-red-600' : 'text-gray-600'
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
+                                            <h3 className={`text-lg font-semibold truncate pr-4 ${task.completed ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-900 dark:text-white'
                                                 }`}>
-                                                {isOverdue && <AlertCircle className="w-4 h-4" />}
-                                                <Calendar className="w-4 h-4" />
-                                                Due: {format(new Date(task.dueDate), 'MMM dd, yyyy')}
-                                            </div>
+                                                {task.title}
+                                            </h3>
                                             {isOverdue && (
-                                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 whitespace-nowrap">
+                                                    <AlertCircle className="w-3 h-3" />
                                                     Overdue
                                                 </span>
                                             )}
+                                        </div>
+
+                                        <p className={`text-sm mb-4 ${task.completed ? 'text-slate-400' : 'text-slate-600 dark:text-slate-300'
+                                            }`}>
+                                            {task.instructions}
+                                        </p>
+
+                                        <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
+                                            <div className={`flex items-center gap-1.5 ${isOverdue ? 'text-red-600 dark:text-red-400' : ''
+                                                }`}>
+                                                <Calendar className="w-4 h-4" />
+                                                <span>Due {format(new Date(task.dueDate), 'MMM dd, yyyy')}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

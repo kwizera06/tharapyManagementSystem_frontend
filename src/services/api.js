@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = '/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -69,7 +69,7 @@ export const goalAPI = {
 
 // Task API
 export const taskAPI = {
-    create: (clientId, therapistId, goalId, title, instructions, dueDate) =>
+    create: (clientId, therapistId, goalId, title, instructions, charset, dueDate) =>
         api.post('/tasks', null, { params: { clientId, therapistId, goalId, title, instructions, dueDate } }),
     markCompleted: (id) => api.put(`/tasks/${id}/complete`),
     getClientTasks: (clientId) => api.get(`/tasks/client/${clientId}`),

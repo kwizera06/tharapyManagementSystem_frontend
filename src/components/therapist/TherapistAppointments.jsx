@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { appointmentAPI } from '../../services/api';
-import { Calendar, Clock, Check, X } from 'lucide-react';
+import { Calendar, Clock, Check, X, User, Search, Filter, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 const TherapistAppointments = () => {
@@ -11,6 +11,7 @@ const TherapistAppointments = () => {
     const [filter, setFilter] = useState('all');
     const [processingId, setProcessingId] = useState(null);
     const [message, setMessage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         loadAppointments();
@@ -43,124 +44,163 @@ const TherapistAppointments = () => {
     };
 
     const filteredAppointments = appointments.filter(apt => {
-        if (filter === 'pending') return apt.status === 'PENDING';
-        if (filter === 'approved') return apt.status === 'APPROVED';
-        return true;
+        const matchesFilter = filter === 'all' ||
+            (filter === 'pending' && apt.status === 'PENDING') ||
+            (filter === 'approved' && apt.status === 'APPROVED');
+
+        const matchesSearch = apt.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+
+        return matchesFilter && matchesSearch;
     });
 
-    const getStatusColor = (status) => {
-        const colors = {
-            PENDING: 'bg-yellow-100 text-yellow-800',
-            APPROVED: 'bg-green-100 text-green-800',
-            REJECTED: 'bg-red-100 text-red-800',
-            COMPLETED: 'bg-blue-100 text-blue-800',
+    const getStatusStyle = (status) => {
+        const styles = {
+            PENDING: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+            APPROVED: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+            REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+            COMPLETED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800',
         };
-        return colors[status] || 'bg-gray-100 text-gray-800';
+        return styles[status] || 'bg-slate-100 text-slate-800';
     };
 
     if (loading) {
-        return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div></div>;
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="relative">
+                    <div className="w-12 h-12 rounded-full border-4 border-primary-200 border-t-primary-600 animate-spin"></div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div>
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-                <p className="text-gray-600">Manage client appointments</p>
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Appointments</h1>
+                    <p className="text-slate-600 dark:text-slate-400">Manage your schedule and requests</p>
+                </div>
             </div>
 
             {message && (
-                <div className={`mb-4 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                <div className={`p-4 rounded-xl flex items-center gap-3 animate-fade-in ${message.type === 'success'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/30'
+                        : 'bg-red-50 text-red-700 border border-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/30'
+                    }`}>
+                    {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                     {message.text}
                 </div>
             )}
 
-            <div className="flex gap-2 mb-6">
-                <button
-                    onClick={() => setFilter('all')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'all' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    All ({appointments.length})
-                </button>
-                <button
-                    onClick={() => setFilter('pending')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'pending' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    Pending ({appointments.filter(a => a.status === 'PENDING').length})
-                </button>
-                <button
-                    onClick={() => setFilter('approved')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${filter === 'approved' ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                >
-                    Approved ({appointments.filter(a => a.status === 'APPROVED').length})
-                </button>
+            <div className="flex flex-col lg:flex-row gap-4">
+                {/* Search */}
+                <div className="flex-1 glass-panel p-2 rounded-xl flex items-center gap-3 px-4">
+                    <Search className="w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search clients..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-transparent border-none focus:ring-0 text-slate-900 dark:text-white placeholder-slate-400 w-full"
+                    />
+                </div>
+
+                {/* Filters */}
+                <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-x-auto">
+                    {['all', 'pending', 'approved'].map((f) => (
+                        <button
+                            key={f}
+                            onClick={() => setFilter(f)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize whitespace-nowrap ${filter === f
+                                    ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                                }`}
+                        >
+                            {f} ({
+                                f === 'all' ? appointments.length :
+                                    appointments.filter(a => a.status === f.toUpperCase()).length
+                            })
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid gap-4">
                 {filteredAppointments.length === 0 ? (
-                    <div className="card text-center py-12">
-                        <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">No appointments found</p>
+                    <div className="text-center py-16 glass-panel rounded-3xl">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Calendar className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No appointments found</h3>
+                        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                            {searchTerm ? 'Try adjusting your search terms' : 'No appointments match the selected filter.'}
+                        </p>
                     </div>
                 ) : (
                     filteredAppointments.map((apt) => (
-                        <div key={apt.id} className="card hover:shadow-md transition-shadow">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h3 className="text-lg font-semibold text-gray-900">
+                        <div key={apt.id} className="glass-panel p-6 rounded-2xl hover:border-primary-500/30 transition-all group">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                <div className="flex items-start gap-4">
+                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/50 dark:to-primary-800/50 flex items-center justify-center text-primary-700 dark:text-primary-300 font-bold text-lg">
+                                        {apt.clientName.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-slate-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                                             {apt.clientName}
                                         </h3>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(apt.status)}`}>
-                                            {apt.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            {format(new Date(apt.appointmentTime), 'MMM dd, yyyy')}
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Clock className="w-4 h-4" />
-                                            {format(new Date(apt.appointmentTime), 'hh:mm a')}
+                                        <div className="flex flex-wrap items-center gap-4 mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                            <div className="flex items-center gap-1.5">
+                                                <Calendar className="w-4 h-4" />
+                                                {format(new Date(apt.appointmentTime), 'MMM dd, yyyy')}
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="w-4 h-4" />
+                                                {format(new Date(apt.appointmentTime), 'hh:mm a')}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                {apt.status === 'PENDING' && (
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleStatusUpdate(apt.id, 'APPROVED')}
-                                            disabled={processingId === apt.id}
-                                            className={`p-2 rounded-lg transition-colors ${processingId === apt.id
-                                                ? 'bg-gray-100 text-gray-400'
-                                                : 'text-green-600 hover:bg-green-50'}`}
-                                            title="Approve"
-                                        >
-                                            {processingId === apt.id ? (
-                                                <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                                            ) : (
-                                                <Check className="w-5 h-5" />
-                                            )}
-                                        </button>
-                                        <button
-                                            onClick={() => handleStatusUpdate(apt.id, 'REJECTED')}
-                                            disabled={processingId === apt.id}
-                                            className={`p-2 rounded-lg transition-colors ${processingId === apt.id
-                                                ? 'bg-gray-100 text-gray-400'
-                                                : 'text-red-600 hover:bg-red-50'}`}
-                                            title="Reject"
-                                        >
-                                            {processingId === apt.id ? (
-                                                <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
-                                            ) : (
-                                                <X className="w-5 h-5" />
-                                            )}
-                                        </button>
-                                    </div>
-                                )}
+
+                                <div className="flex items-center gap-4 self-end md:self-auto">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusStyle(apt.status)}`}>
+                                        {apt.status}
+                                    </span>
+
+                                    {apt.status === 'PENDING' && (
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => handleStatusUpdate(apt.id, 'APPROVED')}
+                                                disabled={processingId === apt.id}
+                                                className={`p-2 rounded-xl transition-all ${processingId === apt.id
+                                                        ? 'bg-slate-100 text-slate-400'
+                                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:scale-110 active:scale-95 border border-emerald-200'
+                                                    }`}
+                                                title="Approve"
+                                            >
+                                                {processingId === apt.id ? (
+                                                    <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <Check className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => handleStatusUpdate(apt.id, 'REJECTED')}
+                                                disabled={processingId === apt.id}
+                                                className={`p-2 rounded-xl transition-all ${processingId === apt.id
+                                                        ? 'bg-slate-100 text-slate-400'
+                                                        : 'bg-red-50 text-red-600 hover:bg-red-100 hover:scale-110 active:scale-95 border border-red-200'
+                                                    }`}
+                                                title="Reject"
+                                            >
+                                                {processingId === apt.id ? (
+                                                    <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin"></div>
+                                                ) : (
+                                                    <X className="w-5 h-5" />
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))
