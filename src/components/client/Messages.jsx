@@ -24,7 +24,9 @@ const Messages = () => {
         loadTherapists();
 
         // Setup WebSocket for incoming calls
-        const socket = new SockJS('http://localhost:8080/ws');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+        const WS_URL = API_URL.replace('/api', '/ws');
+        const socket = new SockJS(WS_URL);
         const stompClient = Stomp.over(socket);
         stompClient.debug = null;
 

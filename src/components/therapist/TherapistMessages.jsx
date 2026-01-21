@@ -29,7 +29,9 @@ const TherapistMessages = () => {
         loadClients();
 
         // Setup WebSocket for incoming calls
-        const socket = new SockJS('http://localhost:8080/ws');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+        const WS_URL = API_URL.replace('/api', '/ws');
+        const socket = new SockJS(WS_URL);
         const stompClient = Stomp.over(socket);
         stompClient.debug = null;
 
@@ -182,13 +184,13 @@ const TherapistMessages = () => {
                                     key={client.id}
                                     onClick={() => setSelectedClient(client)}
                                     className={`w-full p-3 rounded-xl flex items-center gap-3 transition-all duration-200 ${selectedClient?.id === client.id
-                                            ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                                            : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-200'
+                                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-200'
                                         }`}
                                 >
                                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedClient?.id === client.id
-                                            ? 'bg-white/20 text-white'
-                                            : 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
+                                        ? 'bg-white/20 text-white'
+                                        : 'bg-violet-100 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400'
                                         }`}>
                                         <span className="font-semibold">{client.fullName.charAt(0)}</span>
                                     </div>
@@ -256,8 +258,8 @@ const TherapistMessages = () => {
                                             >
                                                 <div
                                                     className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${isOwnMessage
-                                                            ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-none'
-                                                            : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-100 dark:border-gray-700 rounded-bl-none'
+                                                        ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-none'
+                                                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border border-gray-100 dark:border-gray-700 rounded-bl-none'
                                                         } ${isMissedCall ? 'border-red-200 bg-red-50 dark:bg-red-900/20' : ''}`}
                                                 >
                                                     {isMissedCall ? (
